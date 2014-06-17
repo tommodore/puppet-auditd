@@ -1,5 +1,6 @@
 ## managed by puppet
-## gov.uk auditd rules. 
+
+## auditd rules
 
 ## Remove any existing rules
 -D
@@ -10,10 +11,10 @@
 
 ## Failure Mode
 ## Possible values are 0 (silent), 1 (printk, print a failure message),
-## and 2 (panic, halt the system).  
+## and 2 (panic, halt the system).
 -f <%= @failure_mode %>
 
-## Audit the audit logs. 
+## Audit the audit logs.
 ## successful and unsuccessful attempts to read information from the
 ## audit records; all modifications to the audit trail
 -w /var/log/audit/ -k auditlog
@@ -35,7 +36,7 @@
 
 ## Mount operations
 -a entry,always -F arch=b32 -S mount -S umount -S umount2 -k mount
--a entry,always -F arch=b64 -S mount -S umount2 -k mount 
+-a entry,always -F arch=b64 -S mount -S umount2 -k mount
 
 ## changes to the time
 ##
@@ -54,7 +55,7 @@
 -w /etc/cron.monthly/ -p wa -k cron
 -w /etc/cron.weekly/ -p wa -k cron
 -w /etc/crontab -p wa -k cron
--w /var/spool/cron/crontabs/ -k cron 
+-w /var/spool/cron/crontabs/ -k cron
 
 ## user, group, password databases
 -w /etc/group -p wa -k etcgroup
@@ -127,7 +128,6 @@
 -w /etc/issue -p wa -k etcissue
 -w /etc/issue.net -p wa -k etcissue
 
-## this was to noisy currently.
 ## log all commands executed by an effective id of 0 aka root.
 ## -a exit,always -F arch=b64 -F euid=0 -S execve -k rootcmd
 ## -a exit,always -F arch=b32 -F euid=0 -S execve -k rootcmd
@@ -142,6 +142,15 @@
 -a exit,always -F arch=b64 -S open -F dir=/home -F success=0 -k unauthedfileacess
 -a exit,always -F arch=b64 -S open -F dir=/data -F success=0 -k unauthedfileacess
 -a exit,always -F arch=b64 -S open -F dir=/srv -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b32 -S open -F dir=/etc -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b32 -S open -F dir=/bin -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b32 -S open -F dir=/sbin -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b32 -S open -F dir=/usr/bin -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b32 -S open -F dir=/usr/sbin -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b32 -S open -F dir=/var -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b32 -S open -F dir=/home -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b32 -S open -F dir=/data -F success=0 -k unauthedfileacess
+-a exit,always -F arch=b32 -S open -F dir=/srv -F success=0 -k unauthedfileacess
 
 ## Monitor for use of process ID change (switching accounts) applications
 -w /bin/su -p x -k priv_esc
@@ -153,3 +162,36 @@
 -w /sbin/poweroff -p x -k power
 -w /sbin/reboot -p x -k power
 -w /sbin/halt -p x -k power
+
+## PCI Compliance
+# Console log
+-a exit,always -F arch=b64 -S execve -k cmd
+-a exit,always -F arch=b32 -S execve -k cmd
+
+# exclude excessive messages
+-a exclude,always -F msgtype=CWD
+
+# All actions taken by any individual with root or administrative privileges
+-a exit,always -S all -F euid=0 -F perm=wxa -k root
+
+# Access to all audit trails
+# -a always,exit -S all -F dir=/logarchive -F perm=wra -k logs-archive
+-a always,exit -S all -F dir=/var/log/audit -F perm=wra -k audit-logs
+-w /var/log/auth.log -p wra -k logs
+-w /var/log/messages -p wra -k logs
+
+# Invalid logical access attempts
+-a always,exit -F arch=b64 -S all -F exit=-13 -k access
+
+# Creation and deletion of system level objects.
+# According to Payment Card Industry (PCI) Data Security Standard Glossary, Abbreviations and Acronyms System-level object has the following definition:
+# Anything on a system component that is required for its operation, including but not limited to application executable and configuration files, system configuration files, static and shared libraries & DLL‹s, system executables, device drivers and device coniguration files, and added third-party components.
+-a always,exit -S all -F dir=/etc -F perm=wa -k system
+-a always,exit -S all -F dir=/boot -F perm=wa -k system
+-a always,exit -S all -F dir=/usr/lib -F perm=wa -k system
+-a always,exit -S all -F dir=/bin -F perm=wa -k system
+-a always,exit -S all -F dir=/lib -F perm=wa -k system
+-a always,exit -S all -F dir=/lib64 -F perm=wa -k system
+-a always,exit -S all -F dir=/sbin -F perm=wa -k system
+-a always,exit -S all -F dir=/usr/bin -F perm=wa -k system
+-a always,exit -S all -F dir=/usr/sbin -F perm=wa -k system
