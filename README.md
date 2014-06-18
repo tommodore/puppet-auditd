@@ -1,14 +1,46 @@
-# auditd
+AuditD Module
+=============
+
+# Introduction
+
+Based on (https://github.com/gds-operations/puppet-auditd) module
 
 This module contains configurations for auditd, which helps to write
 audit records to the disk in form of logs. One can looks at these logs
 using ausearch and aureport utilities.
+It also configures a syslog forward.
 
-## Example usage
+# Example hiera usage
 
-Include with default parameters:
+### Default parameters:
 ```
-include auditd
+classes:
+  - 'auditd'
+```
+### Specific rule file
+
+```
+auditd::rules:
+  'rule01':
+    source: 'puppet:///modules/example/auditd/pci.rules'
+    order: '20'
+```
+### Specific rule content
+```
+auditd::rules:
+  'rule02':
+    content: "examplecontent\n"
+    order: '21'
+```
+### Combinations are also possible
+```
+auditd::rules:
+  'rule01':
+    source: 'puppet:///modules/example/auditd/pci.rules'
+    order: '20'
+  'rule02':
+    content: "examplecontent\n"
+    order: '21'
 ```
 
 ## License
