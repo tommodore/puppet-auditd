@@ -31,17 +31,17 @@
 -w /sbin/auditd -p x -k audittools
 
 ## special files
--a entry,always -F arch=b32 -S mknod -S mknodat -k specialfiles
--a entry,always -F arch=b64 -S mknod -S mknodat -k specialfiles
+-a exit,always -F arch=b32 -S mknod -S mknodat -k specialfiles
+-a exit,always -F arch=b64 -S mknod -S mknodat -k specialfiles
 
 ## Mount operations
--a entry,always -F arch=b32 -S mount -S umount -S umount2 -k mount
--a entry,always -F arch=b64 -S mount -S umount2 -k mount
+-a exit,always -F arch=b32 -S mount -S umount -S umount2 -k mount
+-a exit,always -F arch=b64 -S mount -S umount2 -k mount
 
 ## changes to the time
 ##
--a entry,always -F arch=b32 -S adjtimex -S settimeofday -S clock_settime -k time
--a entry,always -F arch=b64 -S adjtimex -S settimeofday -S clock_settime -k time
+-a exit,always -F arch=b32 -S adjtimex -S settimeofday -S clock_settime -k time
+-a exit,always -F arch=b64 -S adjtimex -S settimeofday -S clock_settime -k time
 
 ## Use stunnel
 -w /usr/sbin/stunnel -p x -k stunnel
@@ -92,6 +92,7 @@
 
 ## system startup scripts
 -w /etc/inittab -p wa -k init
+-w /etc/rc.local -p wa -k init
 -w /etc/init.d/ -p wa -k init
 -w /etc/init/ -p wa -k init
 
@@ -135,12 +136,14 @@
 -w /etc/issue -p wa -k etcissue
 -w /etc/issue.net -p wa -k etcissue
 
-## log all commands executed by an effective id of 0 aka root.
-## -a exit,always -F arch=b64 -F euid=0 -S execve -k rootcmd
-## -a exit,always -F arch=b32 -F euid=0 -S execve -k rootcmd
-## CompleteConsole log
--a exit,always -F arch=b64 -S execve -k allcmd
--a exit,always -F arch=b32 -S execve -k allcmd
+# exclude excessive messages
+-a exclude,always -F msgtype=CWD
+
+## Monitor for use of process ID change (switching accounts) applications
+-w /bin/su -p x -k priv_esc
+-w /usr/bin/sudo -p x -k priv_esc
+-w /etc/sudoers -p rw -k priv_esc
+
 
 ## Capture all failures to access on critical elements
 -a exit,always -F arch=b64 -S open -F dir=/etc -F success=0 -k unauthedfileacess
@@ -162,10 +165,6 @@
 -a exit,always -F arch=b32 -S open -F dir=/data -F success=0 -k unauthedfileacess
 -a exit,always -F arch=b32 -S open -F dir=/srv -F success=0 -k unauthedfileacess
 
-## Monitor for use of process ID change (switching accounts) applications
--w /bin/su -p x -k priv_esc
--w /usr/bin/sudo -p x -k priv_esc
--w /etc/sudoers -p rw -k priv_esc
 
 ## Monitor usage of commands to change power state
 -w /sbin/shutdown -p x -k power
@@ -175,20 +174,17 @@
 
 ## PCI Compliance
 
-# exclude excessive messages
--a exclude,always -F msgtype=CWD
-
 # All actions taken by any individual with root or administrative privileges
 -a exit,always -S all -F euid=0 -F perm=wxa -k root
 
 # Access to all audit trails
-# -a always,exit -S all -F dir=/logarchive -F perm=wra -k logs-archive
 -a always,exit -S all -F dir=/var/log/audit -F perm=wra -k audit-logs
 -w /var/log/auth.log -p wra -k logs
 -w /var/log/messages -p wra -k logs
 
 # Invalid logical access attempts
 -a always,exit -F arch=b64 -S all -F exit=-13 -k access
+-a always,exit -F arch=b32 -S all -F exit=-13 -k access
 
 # Creation and deletion of system level objects.
 # According to Payment Card Industry (PCI) Data Security Standard Glossary, Abbreviations and Acronyms System-level object has the following definition:
@@ -202,3 +198,10 @@
 -a always,exit -S all -F dir=/sbin -F perm=wa -k system
 -a always,exit -S all -F dir=/usr/bin -F perm=wa -k system
 -a always,exit -S all -F dir=/usr/sbin -F perm=wa -k system
+
+## log all commands executed by an effective id of 0 aka root.
+-a exit,always -F arch=b64 -F euid=0 -S execve -k rootcmd
+-a exit,always -F arch=b32 -F euid=0 -S execve -k rootcmd
+## CompleteConsole log
+## -a exit,always -F arch=b64 -S execve -k allcmd
+## -a exit,always -F arch=b32 -S execve -k allcmd
