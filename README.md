@@ -57,8 +57,8 @@ following keys:-
     auditconfig             audit the audit config /etc/audit/, /etc/libaudit.conf, /etc/audisp/
     auditlog                audit the audit logs
     audit_tools             auditctl, auditd
-    cmd                     All Shell commands
-    cron                    All crontabs & cron configurations. (including root crontab)
+    allcmd                  all Shell commands
+    cron                    all crontabs & cron configurations. (including root crontab)
     etcgroup                /etc/group, /etc/gshadow
     etcissues               /etc/issue, /etc/issue.net
     etcpasswd               /etc/passwd, /etc/shadow

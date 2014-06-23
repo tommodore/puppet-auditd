@@ -1,4 +1,4 @@
-## managed by puppet
+### managed by puppet
 
 ## auditd rules
 
@@ -83,8 +83,12 @@
 -w /var/log/tallylog -p wa -k login
 
 ## network configuration
+# Debian
 -w /etc/hosts -p wa -k hosts
 -w /etc/network/ -p wa -k network
+# RedHat
+-w /etc/sysconfig/network -p wa -k network
+-w /etc/sysconfig/network-scripts/ -p wa -k network
 
 ## system startup scripts
 -w /etc/inittab -p wa -k init
@@ -111,7 +115,10 @@
 -w /etc/security/namespace.init -p wa -k pam
 
 ## Puppet SSL
+# Debian
 -w /etc/puppet/ssl -p wa -k puppet_ssl
+# RedHat
+-w /var/lib/puppet/ssl -p wa -k puppet_ssl
 
 ## postfix configuration
 -w /etc/aliases -p wa -k mail
@@ -131,6 +138,9 @@
 ## log all commands executed by an effective id of 0 aka root.
 ## -a exit,always -F arch=b64 -F euid=0 -S execve -k rootcmd
 ## -a exit,always -F arch=b32 -F euid=0 -S execve -k rootcmd
+## CompleteConsole log
+-a exit,always -F arch=b64 -S execve -k allcmd
+-a exit,always -F arch=b32 -S execve -k allcmd
 
 ## Capture all failures to access on critical elements
 -a exit,always -F arch=b64 -S open -F dir=/etc -F success=0 -k unauthedfileacess
@@ -164,9 +174,6 @@
 -w /sbin/halt -p x -k power
 
 ## PCI Compliance
-# Console log
--a exit,always -F arch=b64 -S execve -k cmd
--a exit,always -F arch=b32 -S execve -k cmd
 
 # exclude excessive messages
 -a exclude,always -F msgtype=CWD
