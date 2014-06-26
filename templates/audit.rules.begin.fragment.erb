@@ -43,6 +43,9 @@
 -a exit,always -F arch=b32 -S adjtimex -S settimeofday -S clock_settime -k time
 -a exit,always -F arch=b64 -S adjtimex -S settimeofday -S clock_settime -k time
 
+## changes to kernel module
+-a always,exit -S init_module -S delete_module -k modules
+
 ## Use stunnel
 -w /usr/sbin/stunnel -p x -k stunnel
 
@@ -172,14 +175,6 @@
 -w /sbin/reboot -p x -k power
 -w /sbin/halt -p x -k power
 
-## PCI Compliance
-
-
-# Access to all audit trails
--a always,exit -S all -F dir=/var/log/audit -F perm=wra -k audit-logs
--w /var/log/auth.log -p wra -k logs
--w /var/log/messages -p wra -k logs
-
 # Invalid logical access attempts
 -a always,exit -F arch=b64 -S all -F exit=-13 -k access
 -a always,exit -F arch=b32 -S all -F exit=-13 -k access
@@ -197,9 +192,8 @@
 -a always,exit -S all -F dir=/usr/bin -F perm=wa -k system
 -a always,exit -S all -F dir=/usr/sbin -F perm=wa -k system
 
-# All actions taken by any individual with root or administrative privileges
+## All actions taken by any individual with root or administrative privileges
 # -a exit,always -S all -F euid=0 -F perm=wxa -k rootcmd
-## CompleteConsole log
--a exit,always -S all -F perm=wxa -k allcmd
-## -a exit,always -F arch=b64 -S execve -k allcmd
-## -a exit,always -F arch=b32 -S execve -k allcmd
+## All actions taken by any individual
+# -a exit,always -F arch=b64 -S execve -k allcmd
+# -a exit,always -F arch=b32 -S execve -k allcmd
